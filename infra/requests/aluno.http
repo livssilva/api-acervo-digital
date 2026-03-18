@@ -17,7 +17,7 @@ Content-Type: application/json
 }
 
 ###
-PUT http://localhost:3333/api/alunos/24
+PUT http://localhost:3333/api/alunos/12
 Content-Type: application/json
 
 {
@@ -26,7 +26,7 @@ Content-Type: application/json
   "data_nascimento": "2003-07-10T03:00:00.000Z",
   "endereco": "Rua do Ingá, 811",
   "email": "joselito@semnocao.com",
-  "celular": "16991915545"
+  "celular": "16991915554"
 }
 
 ###

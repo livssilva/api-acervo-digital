@@ -29,6 +29,7 @@ class Aluno {
     // Atributo privado: Status do aluno (true = ativo, false = inativo/removido)
     private status_aluno: boolean = true;
 
+
     // Construtor: método especial chamado automaticamente ao criar um novo objeto Aluno
     // Os parâmetros com "_" na frente são uma convenção para diferenciar dos atributos da classe
     constructor(
@@ -164,50 +165,56 @@ class Aluno {
     // "async" indica que este método é assíncrono — ele pode "esperar" por operações demoradas (como banco de dados)
     // Retorna uma Promise que, quando resolvida, contém um Array de AlunoDTO ou null
     static async listarAlunos(): Promise<Array<AlunoDTO> | null> {
-        // Cria uma lista vazia que vai receber os alunos encontrados no banco
-        let listaDeAlunos: Array<AlunoDTO> = [];
+    try {
+        // Define a query buscando apenas as colunas necessárias.
+        // Evitar SELECT * melhora a performance pois o banco não precisa
+        // serializar e trafegar colunas que não serão usadas.
+        const querySelectAluno = `
+            SELECT id_aluno,
+                   ra,
+                   nome,
+                   sobrenome,
+                   data_nascimento,
+                   endereco,
+                   email,
+                   celular,
+                   status_aluno
+            FROM Aluno
+            WHERE status_aluno = TRUE;
+        `;
 
-        try {
-            // Bloco try: tenta executar o código; se algo der errado, vai para o catch
+        // Executa a query e aguarda a resposta do banco.
+        // "await" pausa apenas esta função — o servidor continua atendendo
+        // outras requisições normalmente enquanto espera.
+        const respostaBD = await database.query(querySelectAluno);
 
-            // Define a query SQL que busca todos os alunos ativos no banco de dados
-            const querySelectAluno = `SELECT * FROM Aluno WHERE status_aluno = TRUE;`;
+        // .map() transforma cada linha do banco em um objeto AlunoDTO.
+        // É equivalente ao forEach + push anterior, porém mais conciso:
+        // não precisa de variável auxiliar nem de chamar .push() manualmente.
+        const listaDeAlunos: Array<AlunoDTO> = respostaBD.rows.map((aluno: any) => {
+            const alunoDTO: AlunoDTO = {
+                id_aluno:        aluno.id_aluno,
+                ra:              aluno.ra,
+                nome:            aluno.nome,
+                sobrenome:       aluno.sobrenome,
+                data_nascimento: aluno.data_nascimento,
+                endereco:        aluno.endereco,
+                email:           aluno.email,
+                celular:         aluno.celular,
+                status_aluno:    aluno.status_aluno
+            };
+            return alunoDTO;
+        });
 
-            // Executa a query no banco de dados e aguarda o resultado
-            // "await" pausa a execução aqui até o banco responder
-            const respostaBD = await database.query(querySelectAluno);
+        return listaDeAlunos;
 
-            // Percorre cada linha retornada pelo banco de dados
-            // "aluno" é o apelido dado a cada linha individual retornada
-            respostaBD.rows.forEach((aluno: any) => {
-
-                // Cria um objeto AlunoDTO com os dados de cada linha do banco
-                // AlunoDTO é apenas um objeto simples de dados (sem métodos), diferente da classe Aluno
-                const alunoDTO: AlunoDTO = {
-                    id_aluno: aluno.id_aluno,               // ID do aluno
-                    ra: aluno.ra,                           // Registro Acadêmico
-                    nome: aluno.nome,                       // Nome
-                    sobrenome: aluno.sobrenome,             // Sobrenome
-                    data_nascimento: aluno.data_nascimento, // Data de nascimento
-                    endereco: aluno.endereco,               // Endereço
-                    email: aluno.email,                     // E-mail
-                    celular: aluno.celular,                 // Celular
-                    status_aluno: aluno.status_aluno        // Status ativo/inativo
-                };
-
-                // Adiciona o objeto AlunoDTO à lista
-                listaDeAlunos.push(alunoDTO);
-            });
-
-            // Retorna a lista com todos os alunos encontrados
-            return listaDeAlunos;
-        } catch (error) {
-            // Se ocorrer qualquer erro durante a consulta, exibe no console para facilitar o debug
-            console.log(`Erro ao acessar o modelo: ${error}`);
-            // Retorna null para indicar que houve falha
-            return null;
-        }
+    } catch (error) {
+        // console.error exibe o erro em vermelho no terminal e é capturado
+        // por ferramentas de monitoramento — mais adequado que console.log
+        console.error(`Erro ao acessar o modelo: ${error}`);
+        return null;
     }
+}
 
     /**
      * Retorna as informações de um aluno informado pelo ID
