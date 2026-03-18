@@ -270,37 +270,50 @@ class Emprestimo {
      */
     // Recebe um objeto Emprestimo completo e tenta inseri-lo no banco
     static async cadastrarEmprestimo(emprestimo: Emprestimo): Promise<boolean> {
-        try {
-            // Query SQL de inserção — os "$1" a "$5" serão substituídos pelos valores reais
-            // "RETURNING id_emprestimo" faz o banco retornar o ID gerado automaticamente após o INSERT
-            const queryInsertEmprestimo = `
-                INSERT INTO Emprestimo (id_aluno, id_livro, data_emprestimo, data_devolucao, status_emprestimo)
-                VALUES ($1, $2, $3, $4, $5) RETURNING id_emprestimo;
-            `;
+    try {
+        // Query SQL de inserção — os "$1" a "$5" são placeholders substituídos
+        // pelo driver com os valores reais, prevenindo SQL Injection.
+        // "RETURNING id_emprestimo" faz o banco retornar o ID gerado após o INSERT.
+        const queryInsertEmprestimo = `
+            INSERT INTO Emprestimo (id_aluno, id_livro, data_emprestimo, data_devolucao, status_emprestimo)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id_emprestimo;
+        `;
 
-            // Organiza os valores do objeto emprestimo em um array, na mesma ordem dos placeholders ($1, $2...)
-            // Repare que aqui os atributos privados são acessados diretamente (sem getter) — isso funciona dentro da própria classe
-            const valores = [emprestimo.id_aluno, emprestimo.id_livro, emprestimo.data_emprestimo, emprestimo.data_devolucao, emprestimo.status_emprestimo];
-            // Executa a query passando o array de valores e armazena o resultado
-            const resultado = await database.query(queryInsertEmprestimo, valores);
+        // Extrai os valores do objeto em um array, na mesma ordem dos placeholders.
+        // Separar essa etapa da chamada ao banco facilita o debug — se um campo
+        // estiver undefined, o erro aponta para esta linha diretamente.
+        const valores = [
+            emprestimo.id_aluno,           // $1 — ID do aluno
+            emprestimo.id_livro,           // $2 — ID do livro
+            emprestimo.data_emprestimo,    // $3 — Data do empréstimo
+            emprestimo.data_devolucao,     // $4 — Data de devolução
+            emprestimo.status_emprestimo   // $5 — Status do empréstimo
+        ];
 
-            // Se rowCount for diferente de 0, pelo menos uma linha foi inserida — o cadastro foi bem-sucedido
-            if (resultado.rowCount != 0) {
-                // Exibe no console o ID do empréstimo recém-criado
-                console.log(`Empréstimo cadastrado com sucesso! ID: ${resultado.rows[0].id_emprestimo}`);
-                // Retorna true para indicar sucesso
-                return true;
-            }
+        // Executa a query passando os valores separadamente.
+        // "await" pausa a função até o banco responder.
+        const resultado = await database.query(queryInsertEmprestimo, valores);
 
-            // Se nenhuma linha foi afetada, o cadastro não funcionou — retorna false
-            return false;
-
-        } catch (error) {
-            // Exibe o erro no console e retorna false em caso de exceção
-            console.error(`Erro ao cadastrar empréstimo: ${error}`);
-            return false;
+        // rowCount === 1 confirma que exatamente uma linha foi inserida.
+        // Usar "=== 1" é mais seguro que "!= 0" — garante o comportamento
+        // esperado para um INSERT de registro único.
+        if (resultado.rowCount === 1) {
+            // console.log para sucesso — informativo, não é um erro
+            console.log(`Empréstimo cadastrado com sucesso! ID: ${resultado.rows[0].id_emprestimo}`);
+            return true;
         }
+
+        // Se nenhuma linha foi inserida, o cadastro não funcionou
+        return false;
+
+    } catch (error) {
+        // console.error exibe em vermelho no terminal e é capturado por
+        // ferramentas de monitoramento — mais adequado que console.log para erros
+        console.error(`Erro ao cadastrar empréstimo: ${error}`);
+        return false;
     }
+}
 
     /**
      * Atualiza os dados de um empréstimo existente no banco de dados
