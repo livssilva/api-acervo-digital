@@ -356,13 +356,13 @@ class Aluno {
                 // Query SQL de atualização — cada campo recebe um placeholder "$n"
                 // O WHERE garante que só o aluno com o ID correto seja atualizado
                 const queryAtualizarAluno = `UPDATE Aluno SET 
-                                                    nome = '$1', 
-                                                    sobrenome = '$2',
-                                                    data_nascimento = '$3', 
-                                                    endereco = '$4',
-                                                    celular = '$5', 
-                                                    email = '$6'                                            
-                                                WHERE id_aluno = $7`;
+                                    nome = $1, 
+                                    sobrenome = $2,
+                                    data_nascimento = $3, 
+                                    endereco = $4,
+                                    celular = $5, 
+                                    email = $6                                            
+                                WHERE id_aluno = $7`;
 
                 // Executa a query de atualização com os valores do objeto aluno recebido
                 const respostaBD = await database.query(queryAtualizarAluno, [

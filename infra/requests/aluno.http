@@ -17,7 +17,7 @@ Content-Type: application/json
 }
 
 ###
-PUT http://localhost:3333/api/alunos/10
+PUT http://localhost:3333/api/alunos/24
 Content-Type: application/json
 
 {
