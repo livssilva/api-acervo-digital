@@ -269,38 +269,51 @@ class Aluno {
     */
     // Recebe um objeto Aluno completo e tenta inseri-lo no banco de dados
     static async cadastrarAluno(aluno: Aluno): Promise<boolean> {
-        try {
-            // Query SQL de inserção — os "$1", "$2"... são placeholders substituídos pelos valores reais
-            // "RETURNING id_aluno" faz o banco retornar o ID gerado automaticamente após o INSERT
-            const queryInsertAluno = `INSERT INTO Aluno (nome, sobrenome, data_nascimento, endereco, email, celular)
-                                            VALUES ($1, $2, $3, $4, $5, $6) RETURNING id_aluno;`;
+    try {
+        // Query SQL de inserção — os "$1", "$2"... são placeholders que o próprio
+        // driver substitui pelos valores reais. Isso previne SQL Injection,
+        // pois os valores nunca são concatenados diretamente na query.
+        // "RETURNING id_aluno" faz o banco retornar o ID gerado após o INSERT.
+        const queryInsertAluno = `
+            INSERT INTO Aluno (nome, sobrenome, data_nascimento, endereco, email, celular)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id_aluno;
+        `;
 
-            // Executa a query passando os valores do objeto aluno
-            // .toUpperCase() converte texto para maiúsculas; .toLowerCase() converte para minúsculas
-            const result = await database.query(queryInsertAluno, [aluno.getNome().toUpperCase(),
+        // Extrai e normaliza os valores do objeto Aluno antes de montar o array.
+        // Separar essa etapa da chamada ao banco melhora a legibilidade e facilita
+        // o debug — se um getter falhar, o erro aponta para esta linha diretamente.
+        const valores = [
+            aluno.getNome().toUpperCase(),          // Nome em maiúsculas
             aluno.getSobrenome().toUpperCase(),     // Sobrenome em maiúsculas
             aluno.getDataNascimento(),              // Data de nascimento sem transformação
             aluno.getEndereco().toUpperCase(),      // Endereço em maiúsculas
             aluno.getEmail().toLowerCase(),         // E-mail em minúsculas
-            aluno.getCelular()]);                   // Celular sem transformação
+            aluno.getCelular()                      // Celular sem transformação
+        ];
 
-            // Verifica se o banco retornou pelo menos uma linha (ou seja, o INSERT funcionou)
-            if (result.rows.length > 0) {
-                // Exibe no console o ID do aluno recém-cadastrado
-                console.log(`Aluno cadastrado com sucesso. ID: ${result.rows[0].id_aluno}`);
-                // Retorna true para indicar sucesso
-                return true;
-            }
+        // Executa a query passando os valores separadamente (nunca concatenados).
+        // "await" pausa a função até o banco responder, sem travar o servidor.
+        const result = await database.query(queryInsertAluno, valores);
 
-            // Se nenhuma linha foi retornada, o cadastro não funcionou — retorna false
-            return false;
-        } catch (error) {
-            // Captura e exibe qualquer erro ocorrido durante o cadastro
-            console.error(`Erro ao cadastrar aluno: ${error}`);
-            // Retorna false indicando falha
-            return false;
+        // .rows.length > 0 confirma que o banco retornou o ID gerado,
+        // ou seja, que o INSERT foi executado com sucesso.
+        if (result.rows.length > 0) {
+            // console.log para sucesso — informativo, não é um erro
+            console.log(`Aluno cadastrado com sucesso. ID: ${result.rows[0].id_aluno}`);
+            return true;
         }
+
+        // Se nenhuma linha foi retornada, o INSERT não surtiu efeito
+        return false;
+
+    } catch (error) {
+        // console.error exibe em vermelho no terminal e é capturado por
+        // ferramentas de monitoramento — mais adequado que console.log para erros
+        console.error(`Erro ao cadastrar aluno: ${error}`);
+        return false;
     }
+}
 
     /**
     * Remove um aluno do banco de dados
