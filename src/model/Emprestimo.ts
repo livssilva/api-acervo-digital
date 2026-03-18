@@ -320,42 +320,57 @@ class Emprestimo {
      */
     // Diferente dos outros métodos, este recebe os dados separados como parâmetros individuais (não um objeto Emprestimo)
     static async atualizarEmprestimo(
-        id_emprestimo: number,    // ID do empréstimo a ser atualizado
-        id_aluno: number,         // Novo ID do aluno
-        id_livro: number,         // Novo ID do livro
-        data_emprestimo: Date,    // Nova data de empréstimo
-        data_devolucao: Date,     // Nova data de devolução
-        status_emprestimo: string // Novo status do empréstimo
-    ): Promise<boolean> {
-        try {
-            // Query SQL de atualização — o WHERE garante que apenas o empréstimo com o ID correto seja alterado
-            // "RETURNING id_emprestimo" retorna o ID do registro atualizado, confirmando que ele existe
-            const queryUpdateEmprestimo = `UPDATE Emprestimo
-            SET id_aluno = $1, id_livro = $2, data_emprestimo = $3, data_devolucao = $4, status_emprestimo = $5
+    id_emprestimo: number,     // ID do empréstimo a ser atualizado
+    id_aluno: number,          // Novo ID do aluno
+    id_livro: number,          // Novo ID do livro
+    data_emprestimo: Date,     // Nova data de empréstimo
+    data_devolucao: Date,      // Nova data de devolução
+    status_emprestimo: string  // Novo status do empréstimo
+): Promise<boolean> {
+    try {
+        // Query SQL de atualização — cada "$n" é um placeholder substituído
+        // pelo driver, prevenindo SQL Injection.
+        // "RETURNING id_emprestimo" retorna o ID do registro atualizado,
+        // confirmando que o empréstimo existe e foi alterado com sucesso.
+        const queryUpdateEmprestimo = `
+            UPDATE Emprestimo
+            SET id_aluno          = $1,
+                id_livro          = $2,
+                data_emprestimo   = $3,
+                data_devolucao    = $4,
+                status_emprestimo = $5
             WHERE id_emprestimo = $6
-            RETURNING id_emprestimo;`;
+            RETURNING id_emprestimo;
+        `;
 
-            // Organiza os valores em um array na mesma ordem dos placeholders da query
-            // Repare que id_emprestimo vai por último ($6) pois é usado no WHERE, não no SET
-            const valores = [id_aluno, id_livro, data_emprestimo, data_devolucao, status_emprestimo, id_emprestimo];
-            // Executa a query de atualização e armazena o resultado
-            const resultado = await database.query(queryUpdateEmprestimo, valores);
+        // Extrai os valores em um array na mesma ordem dos placeholders.
+        // Nota: id_emprestimo vai por último ($6) pois é usado no WHERE, não no SET.
+        const valores = [
+            id_aluno,           // $1 — novo ID do aluno
+            id_livro,           // $2 — novo ID do livro
+            data_emprestimo,    // $3 — nova data de empréstimo
+            data_devolucao,     // $4 — nova data de devolução
+            status_emprestimo,  // $5 — novo status
+            id_emprestimo       // $6 — identifica qual registro atualizar (WHERE)
+        ];
 
-            // Se rowCount for 0, nenhuma linha foi alterada — significa que o ID não existe no banco
-            if (resultado.rowCount === 0) {
-                // Lança um erro manualmente para ser capturado pelo bloco catch abaixo
-                throw new Error('Empréstimo não encontrado.');
-            }
+        // Executa a query de atualização passando os valores separadamente.
+        // "await" pausa a função até o banco responder.
+        const resultado = await database.query(queryUpdateEmprestimo, valores);
 
-            // Se chegou até aqui, a atualização foi bem-sucedida — retorna true
-            return true;
+        // rowCount === 1 confirma que exatamente um registro foi atualizado.
+        // Se for 0, o ID informado não existe no banco — retorna false sem lançar erro,
+        // pois "não encontrado" é um resultado esperado, não uma exceção.
+        return resultado.rowCount === 1;
 
-        } catch (error) {
-            // Captura tanto erros do banco quanto o erro lançado manualmente acima
-            console.error(`Erro ao atualizar empréstimo: ${error}`);
-            return false;
-        }
+    } catch (error) {
+        // Captura erros inesperados do banco — falha de conexão, query inválida, etc.
+        // console.error exibe em vermelho no terminal e é capturado por
+        // ferramentas de monitoramento — mais adequado que console.log para erros.
+        console.error(`Erro ao atualizar empréstimo: ${error}`);
+        return false;
     }
+}
 
     /**
      * Remove um empréstimo ativo do banco de dados
