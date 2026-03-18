@@ -28,4 +28,4 @@ Content-Type: application/json
 }
 
 ###
-DELETE http://localhost:3333/api/emprestimos/30
+DELETE http://localhost:3333/api/emprestimos/3
