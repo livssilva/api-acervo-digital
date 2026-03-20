@@ -28,22 +28,25 @@ class LivroController extends Livro {
 
     // Método que busca um único livro com base no ID informado na URL (ex: GET /livro/3)
     static async livro(req: Request, res: Response) {
-        try {
-            // Lê o parâmetro "id" da URL e converte de string para número inteiro
-            const idLivro = parseInt(req.params.id as string);
+    try {
+        // Lê o parâmetro "id" da URL e converte para número inteiro.
+        // Ex: GET /livro/5 → idLivro = 5
+        const idLivro = parseInt(req.params.id as string);
 
-            // Chama o método do model passando o ID para buscar o livro específico no banco
-            const livro = await Livro.listarLivro(idLivro);
-            // Retorna o objeto do livro em JSON com status HTTP 200 (OK)
-            return res.status(200).json(livro);
-        } catch (error) {
-            // Exibe o erro no console do servidor
-            console.log(`Erro ao acessar método herdado: ${error}`);
-            // Retorna mensagem de erro com status HTTP 500
-            // ⚠️ O comentário diz "status code 400" mas o código usa 500 — são códigos diferentes
-            return res.status(500).json("Erro ao recuperar as informações do livro.");
-        }
+        // Busca o livro específico no banco via model.
+        const livro = await Livro.listarLivro(idLivro);
+
+        // HTTP 200 — requisição bem-sucedida, retorna o livro em JSON.
+        return res.status(200).json(livro);
+
+    } catch (error) {
+        // console.error para erros — capturado por ferramentas de monitoramento.
+        console.error(`Erro ao listar livro: ${error}`);
+
+        // HTTP 500 — erro interno inesperado do servidor.
+        return res.status(500).json({ mensagem: "Erro ao recuperar as informações do livro." });
     }
+}
 
     // Método que recebe os dados do front-end e cria um novo livro no banco de dados
     static async cadastrar(req: Request, res: Response) {
