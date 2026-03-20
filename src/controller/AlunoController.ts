@@ -150,45 +150,45 @@ class AlunoController extends Aluno {
      */
     // Método que recebe os novos dados do front-end e atualiza o cadastro do aluno no banco
     static async atualizar(req: Request, res: Response): Promise<Response> {
-        try {
-            // Lê o corpo da requisição e tipifica como AlunoDTO
-            // O front-end envia os dados atualizados no corpo da requisição
-            const dadosRecebidos: AlunoDTO = req.body;
+    try {
+        // Lê o corpo da requisição tipificado como AlunoDTO.
+        // O front-end envia os dados atualizados em formato JSON no body.
+        const dadosRecebidos: AlunoDTO = req.body;
 
-            // Cria um novo objeto Aluno com os dados atualizados recebidos do front-end
-            // Mesma lógica do método cadastrar — usa "??" para garantir valores padrão nos campos opcionais
-            const aluno = new Aluno(
-                dadosRecebidos.nome,
-                dadosRecebidos.sobrenome,
-                dadosRecebidos.data_nascimento ?? new Date("1900-01-01"),
-                dadosRecebidos.endereco ?? '',
-                dadosRecebidos.email ?? '',
-                dadosRecebidos.celular
-            );
+        // Cria o objeto Aluno com os dados recebidos.
+        // "??" define fallbacks para campos opcionais não enviados pelo front-end.
+        const aluno = new Aluno(
+            dadosRecebidos.nome,
+            dadosRecebidos.sobrenome,
+            dadosRecebidos.data_nascimento ?? new Date("1900-01-01"), // fallback: 01/01/1900
+            dadosRecebidos.endereco        ?? "",                     // fallback: string vazia
+            dadosRecebidos.email           ?? "",                     // fallback: string vazia
+            dadosRecebidos.celular                                    // opcional — pode ser undefined
+        );
 
-            // Define o ID do aluno no objeto criado, lendo o parâmetro "id" da URL
-            // Isso é necessário para que o model saiba QUAL aluno deve ser atualizado no banco
-            // Exemplo de URL: PUT /aluno/7  →  setIdAluno(7)
-            aluno.setIdAluno(parseInt(req.params.id as string));
+        // Define o ID via parâmetro da URL — indica qual aluno será atualizado no banco.
+        // Ex: PUT /aluno/7 → setIdAluno(7)
+        aluno.setIdAluno(parseInt(req.params.id as string));
 
-            // Chama o método do model para atualizar os dados do aluno no banco de dados
-            const result = await Aluno.atualizarAluno(aluno);
+        // Persiste as alterações no banco via model.
+        const result = await Aluno.atualizarAluno(aluno);
 
-            // Verifica o retorno do model: true = atualização bem-sucedida, false = falha
-            if (result) {
-                // Retorna mensagem de sucesso com status HTTP 200 (OK)
-                return res.status(200).json({ mensagem: "Cadastro atualizado com sucesso." });
-            } else {
-                // Retorna mensagem de erro com status HTTP 500 se o banco não conseguiu atualizar
-                return res.status(500).json({ mensagem: 'Não foi possível atualizar o aluno no banco de dados.' });
-            }
-        } catch (error) {
-            // Registra o erro nos logs do servidor
-            console.error(`Erro ao atualizar aluno: ${error}`);
-            // Retorna mensagem de erro com status HTTP 500 em caso de exceção inesperada
-            return res.status(500).json({ mensagem: "Erro ao atualizar aluno." });
+        if (result) {
+            // HTTP 200 — atualização bem-sucedida.
+            return res.status(200).json({ mensagem: "Cadastro atualizado com sucesso." });
         }
+
+        // HTTP 400 — requisição válida, mas o banco não encontrou o aluno para atualizar.
+        return res.status(400).json({ mensagem: "Não foi possível atualizar o aluno." });
+
+    } catch (error) {
+        // console.error para erros — capturado por ferramentas de monitoramento.
+        console.error(`Erro ao atualizar aluno: ${error}`);
+
+        // HTTP 500 — erro interno inesperado do servidor.
+        return res.status(500).json({ mensagem: "Erro ao atualizar aluno." });
     }
+}
 }
 
 // Exporta a classe AlunoController para que possa ser importada e usada nas rotas da aplicação
