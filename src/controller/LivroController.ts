@@ -116,54 +116,51 @@ class LivroController extends Livro {
 
     // Método que recebe os novos dados do front-end e atualiza o cadastro do livro no banco
     static async atualizar(req: Request, res: Response): Promise<Response> {
-        try {
-            // Lê o parâmetro "id" da URL e converte para número inteiro
-            // Exemplo de URL: PUT /livro/7  →  idLivro = 7
-            const idLivro = parseInt(req.params.id as string);
+    try {
+        // Lê o parâmetro "id" da URL e converte para número inteiro.
+        // Ex: PUT /livro/7 → idLivro = 7
+        const idLivro = parseInt(req.params.id as string);
 
-            // Lê o corpo da requisição e tipifica como LivroDTO
-            // O front-end envia os dados atualizados no corpo da requisição
-            const dadosRecebidos: LivroDTO = req.body;
+        // Lê o corpo da requisição tipificado como LivroDTO.
+        // O front-end envia os dados atualizados em formato JSON no body.
+        const dadosRecebidos: LivroDTO = req.body;
 
-            // Cria um novo objeto Livro com os dados atualizados recebidos do front-end
-            // Mesma lógica do método cadastrar — usa "??" para garantir valores padrão nos campos opcionais
-            const livro = new Livro(
-                dadosRecebidos.titulo,
-                dadosRecebidos.autor,
-                dadosRecebidos.editora,
-                // Se ano_publicacao não foi informado, usa "0" como valor padrão
-                (dadosRecebidos.ano_publicacao ?? 0).toString(),
-                dadosRecebidos.isbn,
-                dadosRecebidos.quant_total,
-                dadosRecebidos.quant_disponivel,
-                dadosRecebidos.quant_aquisicao,
-                dadosRecebidos.valor_aquisicao ?? 0
-            );
+        // Cria o objeto Livro com os dados recebidos.
+        // "??" define fallbacks para campos opcionais não enviados pelo front-end.
+        const livro = new Livro(
+            dadosRecebidos.titulo,
+            dadosRecebidos.autor,
+            dadosRecebidos.editora,
+            (dadosRecebidos.ano_publicacao ?? 0).toString(), // number → string; fallback: "0"
+            dadosRecebidos.isbn,
+            dadosRecebidos.quant_total,
+            dadosRecebidos.quant_disponivel,
+            dadosRecebidos.quant_aquisicao,
+            dadosRecebidos.valor_aquisicao ?? 0              // fallback: 0
+        );
 
-            // Define o ID do livro no objeto criado, lendo o parâmetro capturado da URL
-            // Isso é necessário para que o model saiba QUAL livro deve ser atualizado no banco
-            livro.setIdLivro(idLivro);
+        // Define o ID via parâmetro da URL — indica qual livro será atualizado no banco.
+        livro.setIdLivro(idLivro);
 
-            // Chama o método do model para atualizar os dados do livro no banco de dados
-            // Usa o nome "sucesso" ao invés de "result" — apenas uma diferença de nomenclatura, mesmo comportamento
-            const sucesso = await Livro.atualizarLivro(livro);
+        // Persiste as alterações no banco via model.
+        const sucesso = await Livro.atualizarLivro(livro);
 
-            // Verifica o retorno do model: true = atualização bem-sucedida, false = falha
-            if (sucesso) {
-                // Retorna mensagem de sucesso com status HTTP 200 (OK)
-                return res.status(200).json({ mensagem: "Cadastro atualizado com sucesso!" });
-            } else {
-                // ⚠️ Diferença dos outros controllers: usa status HTTP 400 (Bad Request) ao invés de 500
-                // 400 indica que a requisição foi malformada ou os dados são inválidos
-                // 500 indica erro interno do servidor — semanticamente, 400 pode fazer mais sentido aqui
-                return res.status(400).json({ mensagem: "Não foi possível atualizar o livro no banco de dados." });
-            }
-        } catch (error) {
-            // Exibe o erro no console e retorna status HTTP 500 em caso de exceção inesperada
-            console.error(`Erro ao atualizar livro: ${error}`);
-            return res.status(500).json({ mensagem: "Erro ao atualizar o livro." });
+        if (sucesso) {
+            // HTTP 200 — atualização bem-sucedida.
+            return res.status(200).json({ mensagem: "Cadastro atualizado com sucesso." });
         }
+
+        // HTTP 400 — requisição válida, mas o banco não encontrou o livro para atualizar.
+        return res.status(400).json({ mensagem: "Não foi possível atualizar o livro." });
+
+    } catch (error) {
+        // console.error para erros — capturado por ferramentas de monitoramento.
+        console.error(`Erro ao atualizar livro: ${error}`);
+
+        // HTTP 500 — erro interno inesperado do servidor.
+        return res.status(500).json({ mensagem: "Erro ao atualizar o livro." });
     }
+}
 }
 
 // Exporta a classe LivroController para que possa ser importada e usada nas rotas da aplicação
