@@ -223,39 +223,35 @@ class Livro {
      */
     // Recebe o ID do livro e retorna um único LivroDTO ou null
     static async listarLivro(id_livro: number): Promise<LivroDTO | null> {
-        try {
-            // Query SQL que busca um livro específico pelo ID
-            // O "$1" é um placeholder substituído pelo valor real (proteção contra SQL Injection)
-            const querySelectLivro = `SELECT * FROM livro WHERE id_livro = $1`;
+    try {
+        const { rows } = await database.query(
+            `SELECT * FROM livro WHERE id_livro = $1`,
+            [id_livro]
+        );
 
-            // Executa a query passando o id_livro como parâmetro (substitui o $1)
-            const respostaBD = await database.query(querySelectLivro, [id_livro]);
+        if (!rows.length) return null;
 
-            // Monta o objeto LivroDTO com os dados da primeira (e única) linha retornada
-            // rows[0] acessa o primeiro elemento do array de resultados
-            const livroDTO: LivroDTO = {
-                id_livro: respostaBD.rows[0].id_livro,
-                titulo: respostaBD.rows[0].titulo,
-                autor: respostaBD.rows[0].autor,
-                editora: respostaBD.rows[0].editora,
-                ano_publicacao: respostaBD.rows[0].ano_publicacao,
-                isbn: respostaBD.rows[0].isbn,
-                quant_total: respostaBD.rows[0].quant_total,
-                quant_disponivel: respostaBD.rows[0].quant_disponivel,
-                quant_aquisicao: respostaBD.rows[0].quant_aquisicao,
-                valor_aquisicao: respostaBD.rows[0].valor_aquisicao,
-                status_livro_emprestado: respostaBD.rows[0].status_livro_emprestado,
-                status_livro: respostaBD.rows[0].status_livro
-            };
+        const row = rows[0];
 
-            // Retorna o objeto LivroDTO preenchido com os dados do banco
-            return livroDTO;
-        } catch (error) {
-            // Exibe o erro no console e retorna null em caso de falha
-            console.error(`Erro ao realizar consulta. ${error}`);
-            return null;
-        }
+        return {
+            id_livro: row.id_livro,
+            titulo: row.titulo,
+            autor: row.autor,
+            editora: row.editora,
+            ano_publicacao: row.ano_publicacao,
+            isbn: row.isbn,
+            quant_total: row.quant_total,
+            quant_disponivel: row.quant_disponivel,
+            quant_aquisicao: row.quant_aquisicao,
+            valor_aquisicao: row.valor_aquisicao,
+            status_livro_emprestado: row.status_livro_emprestado,
+            status_livro: row.status_livro
+        };
+    } catch (error) {
+        console.error(`Erro ao realizar consulta. ${error}`);
+        return null;
     }
+}
 
     /**
      * Cadastra um novo livro no banco de dados
