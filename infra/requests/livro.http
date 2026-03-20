@@ -34,4 +34,4 @@ Content-Type: application/json
 }
 
 ###
-DELETE http://localhost:3333/api/livros/21
+DELETE http://localhost:3333/api/livros/3
