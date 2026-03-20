@@ -68,39 +68,40 @@ class EmprestimoController extends Emprestimo {
      */
     // Método que recebe os dados do front-end e cria um novo empréstimo no banco de dados
     static async cadastrar(req: Request, res: Response): Promise<Response> {
-        try {
-            // Lê o corpo da requisição HTTP e tipifica como EmprestimoDTO
-            // O front-end envia os dados do novo empréstimo no corpo da requisição em formato JSON
-            const dadosRecebidos: EmprestimoDTO = req.body;
+    try {
+        // Lê o corpo da requisição tipificado como EmprestimoDTO.
+        // O front-end envia os dados do novo empréstimo em formato JSON no body.
+        const dadosRecebidos: EmprestimoDTO = req.body;
 
-            // Cria um novo objeto Emprestimo com os dados recebidos do front-end
-            const emprestimo = new Emprestimo(
-                dadosRecebidos.aluno.id_aluno,    // ID do aluno — vem do objeto aninhado "aluno" do DTO
-                dadosRecebidos.livro.id_livro,    // ID do livro — vem do objeto aninhado "livro" do DTO
-                new Date(dadosRecebidos.data_emprestimo), // Converte a data recebida (string) para objeto Date
-                dadosRecebidos.status_emprestimo ?? "", // Se não informado, usa string vazia como padrão
-                // Se data_devolucao foi informada, converte para Date; senão passa undefined
-                // Quando undefined, o construtor de Emprestimo calcula automaticamente (data_emprestimo + 7 dias)
-                dadosRecebidos.data_devolucao ? new Date(dadosRecebidos.data_devolucao) : undefined
-            );
+        // Cria o objeto Emprestimo com os dados recebidos.
+        const emprestimo = new Emprestimo(
+            dadosRecebidos.aluno.id_aluno,                                        // ID do aluno (objeto aninhado)
+            dadosRecebidos.livro.id_livro,                                        // ID do livro (objeto aninhado)
+            new Date(dadosRecebidos.data_emprestimo),                             // string → Date
+            dadosRecebidos.status_emprestimo ?? "",                               // fallback: string vazia
+            dadosRecebidos.data_devolucao ? new Date(dadosRecebidos.data_devolucao) : undefined
+            // Se não informada, o construtor calcula automaticamente (data_emprestimo + 7 dias)
+        );
 
-            // Chama o método do model para persistir o novo empréstimo no banco de dados
-            const result = await Emprestimo.cadastrarEmprestimo(emprestimo);
+        // Persiste o novo empréstimo no banco via model.
+        const result = await Emprestimo.cadastrarEmprestimo(emprestimo);
 
-            // Verifica o retorno do model: true = cadastro bem-sucedido, false = falha
-            if (result) {
-                // Retorna mensagem de sucesso com status HTTP 201 (Created — recurso criado com sucesso)
-                return res.status(201).json({ mensagem: 'Empréstimo cadastrado com sucesso.' });
-            } else {
-                // Retorna mensagem de erro com status HTTP 500 se o banco não conseguiu salvar
-                return res.status(500).json({ mensagem: 'Não foi possível cadastrar o livro no banco de dados.' });
-            }
-        } catch (error) {
-            // Exibe o erro no console e retorna status HTTP 500 em caso de exceção inesperada
-            console.error('Erro ao cadastrar empréstimo:', error);
-            return res.status(500).json({ mensagem: 'Erro ao cadastrar o empréstimo.' });
+        if (result) {
+            // HTTP 201 — recurso criado com sucesso.
+            return res.status(201).json({ mensagem: "Empréstimo cadastrado com sucesso." });
         }
+
+        // HTTP 400 — requisição válida, mas o banco não conseguiu salvar.
+        return res.status(400).json({ mensagem: "Não foi possível cadastrar o empréstimo." });
+
+    } catch (error) {
+        // console.error para erros — capturado por ferramentas de monitoramento.
+        console.error(`Erro ao cadastrar empréstimo: ${error}`);
+
+        // HTTP 500 — erro interno inesperado do servidor.
+        return res.status(500).json({ mensagem: "Erro ao cadastrar o empréstimo." });
     }
+}
 
     /**
      * Atualiza um empréstimo existente.
