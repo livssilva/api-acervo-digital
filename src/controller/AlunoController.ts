@@ -43,22 +43,25 @@ class AlunoController extends Aluno {
      */
     // Método que busca um único aluno com base no ID informado na URL (ex: GET /aluno/5)
     static async aluno(req: Request, res: Response) {
-        try {
-            // Lê o parâmetro "id" da URL (req.params.id) e converte de string para número inteiro
-            // O "as string" garante ao TypeScript que o valor existe e é uma string
-            const idAluno = parseInt(req.params.id as string);
+    try {
+        // Lê o parâmetro "id" da URL e converte de string para número inteiro.
+        // Ex: GET /aluno/5 → idAluno = 5
+        const idAluno = parseInt(req.params.id as string);
 
-            // Chama o método do model passando o ID para buscar o aluno específico no banco
-            const aluno = await Aluno.listarAluno(idAluno);
-            // Retorna o objeto do aluno em JSON com status HTTP 200 (OK)
-            res.status(200).json(aluno);
-        } catch (error) {
-            // Exibe o erro no console do servidor
-            console.log(`Erro ao acessar método herdado: ${error}`);
-            // Retorna mensagem de erro com status HTTP 500
-            res.status(500).json("Erro ao recuperar as informações do aluno.");
-        }
+        // Busca o aluno específico no banco via model.
+        const aluno = await Aluno.listarAluno(idAluno);
+
+        // HTTP 200 — requisição bem-sucedida, retorna o aluno em JSON.
+        res.status(200).json(aluno);
+
+    } catch (error) {
+        // console.error para erros — capturado por ferramentas de monitoramento.
+        console.error(`Erro ao listar aluno: ${error}`);
+
+        // HTTP 500 — erro interno do servidor, algo inesperado aconteceu.
+        res.status(500).json({ mensagem: "Erro ao recuperar as informações do aluno." });
     }
+}
 
     /**
       * Cadastra um novo aluno.
