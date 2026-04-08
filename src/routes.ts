@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from "express";
 import AlunoController from "./controller/AlunoController.js";
 import LivroController from "./controller/LivroController.js";
 import EmprestimoController from "./controller/EmprestimoController.js";
+import AuthController from "./controller/AuthController.js";
 
 const router = Router();
 
@@ -26,6 +27,8 @@ router.delete("/api/alunos/:id", AlunoController.remover);
 
 // Atualiza os dados de um aluno pelo ID — novos dados chegam no body
 router.put("/api/alunos/:id", AlunoController.atualizar);
+
+router.post("/login", AuthController.login);
 
 // ==================== LIVRO ====================
 

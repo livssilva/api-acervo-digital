@@ -79,13 +79,14 @@ class AlunoController extends Aluno {
         // Cria o objeto Aluno com os dados recebidos.
         // "??" define fallbacks para campos opcionais não enviados pelo front-end.
         const novoAluno = new Aluno(
-            dadosRecebidos.nome,
-            dadosRecebidos.sobrenome,
-            dadosRecebidos.data_nascimento ?? new Date("1900-01-01"), // fallback: 01/01/1900
-            dadosRecebidos.endereco        ?? "",                     // fallback: string vazia
-            dadosRecebidos.email           ?? "",                     // fallback: string vazia
-            dadosRecebidos.celular                                    // opcional — pode ser undefined
-        );
+  dadosRecebidos.nome,
+  dadosRecebidos.sobrenome,
+  dadosRecebidos.data_nascimento ?? new Date("1900-01-01"),
+  dadosRecebidos.endereco ?? "",
+  dadosRecebidos.email ?? "",
+  dadosRecebidos.senha ?? "",
+  dadosRecebidos.celular
+);
 
         // Persiste o novo aluno no banco via model.
         const result = await Aluno.cadastrarAluno(novoAluno);
@@ -158,13 +159,14 @@ class AlunoController extends Aluno {
         // Cria o objeto Aluno com os dados recebidos.
         // "??" define fallbacks para campos opcionais não enviados pelo front-end.
         const aluno = new Aluno(
-            dadosRecebidos.nome,
-            dadosRecebidos.sobrenome,
-            dadosRecebidos.data_nascimento ?? new Date("1900-01-01"), // fallback: 01/01/1900
-            dadosRecebidos.endereco        ?? "",                     // fallback: string vazia
-            dadosRecebidos.email           ?? "",                     // fallback: string vazia
-            dadosRecebidos.celular                                    // opcional — pode ser undefined
-        );
+  dadosRecebidos.nome,
+  dadosRecebidos.sobrenome,
+  dadosRecebidos.data_nascimento ?? new Date("1900-01-01"),
+  dadosRecebidos.endereco ?? "",
+  dadosRecebidos.email ?? "",
+  dadosRecebidos.senha ?? "",
+  dadosRecebidos.celular
+);
 
         // Define o ID via parâmetro da URL — indica qual aluno será atualizado no banco.
         // Ex: PUT /aluno/7 → setIdAluno(7)

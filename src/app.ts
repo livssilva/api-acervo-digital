@@ -9,7 +9,7 @@ dotenv.config();
 // Lê PORT e HOST do .env.
 // parseInt converte PORT de string para número — o Express exige um número na porta.
 // "??" garante fallback caso HOST não esteja definido no .env.
-const port: number = parseInt(process.env.PORT as string);
+const port: number = 3333;
 const host: string = process.env.HOST ?? "";
 
 // Testa a conexão com o banco antes de subir o servidor.

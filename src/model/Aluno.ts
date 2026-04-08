@@ -12,18 +12,27 @@ class Aluno {
 
     // Atributo privado: ID único do aluno no banco de dados (começa em 0, pois ainda não foi salvo)
     private id_aluno: number = 0;
+
     // Atributo privado: Registro Acadêmico do aluno (começa vazio)
     private ra: string = "";
+
     // Atributo privado: Primeiro nome do aluno
     private nome: string;
+
     // Atributo privado: Sobrenome do aluno
     private sobrenome: string;
+
     // Atributo privado: Data de nascimento do aluno
     private data_nascimento: Date;
+
     // Atributo privado: Endereço residencial do aluno
     private endereco: string;
+
     // Atributo privado: E-mail do aluno
     private email: string;
+    // Atributo privado: Senha do aluno
+    private senha: string;
+
     // Atributo privado: Número de celular do aluno
     private celular: string;
     // Atributo privado: Status do aluno (true = ativo, false = inativo/removido)
@@ -32,24 +41,23 @@ class Aluno {
 
     // Construtor: método especial chamado automaticamente ao criar um novo objeto Aluno
     // Os parâmetros com "_" na frente são uma convenção para diferenciar dos atributos da classe
-    constructor(
-        _nome: string,           // Nome obrigatório
-        _sobrenome: string,      // Sobrenome obrigatório
-        _data_nascimento: Date,  // Data de nascimento obrigatória
-        _endereco: string,       // Endereço obrigatório
-        _email: string,          // E-mail obrigatório
-        _celular?: string        // Celular opcional (o "?" indica que pode ser omitido)
-    ) {
-        // Atribui o valor recebido ao atributo interno da classe
-        this.nome = _nome;
-        this.sobrenome = _sobrenome;
-        this.data_nascimento = _data_nascimento;
-        this.endereco = _endereco;
-        this.email = _email;
-        // Se _celular foi informado, usa esse valor; senão, usa string vazia ("")
-        // O operador "??" é chamado de "nullish coalescing" — retorna o lado direito se o esquerdo for null/undefined
-        this.celular = _celular ?? "";
-    }
+  constructor(
+  _nome: string,
+  _sobrenome: string,
+  _data_nascimento: Date,
+  _endereco: string,
+  _email: string,
+  _senha: string,
+  _celular?: string
+) {
+    this.nome = _nome;
+    this.sobrenome = _sobrenome;
+    this.data_nascimento = _data_nascimento;
+    this.endereco = _endereco;
+    this.email = _email;
+    this.senha = _senha;
+    this.celular = _celular ?? "";
+}
 
     // ==================== GETTERS E SETTERS ====================
     // Getters e setters são métodos públicos que permitem ler/alterar atributos privados com segurança
@@ -123,6 +131,14 @@ class Aluno {
     public setEmail(email: string): void {
         this.email = email;
     }
+
+    public getSenha(): string {
+    return this.senha;
+}
+
+public setSenha(senha: string): void {
+    this.senha = senha;
+}
 
     // Getter: retorna o celular do aluno
     public getCelular(): string {
@@ -262,6 +278,35 @@ class Aluno {
         }
     }
 
+    static async buscarAlunoPorEmail(email: string): Promise<AlunoDTO | null> {
+    try {
+        const query = `SELECT * FROM aluno WHERE email = $1 AND status_aluno = TRUE`;
+        const respostaBD = await database.query(query, [email]);
+
+        if (respostaBD.rows.length === 0) return null;
+
+        const aluno = respostaBD.rows[0];
+
+        const alunoDTO: AlunoDTO = {
+            id_aluno: aluno.id_aluno,
+            nome: aluno.nome,
+            sobrenome: aluno.sobrenome,
+            data_nascimento: aluno.data_nascimento,
+            endereco: aluno.endereco,
+            email: aluno.email,
+            celular: aluno.celular,
+            ra: aluno.ra,
+            status_aluno: aluno.status_aluno,
+            senha: aluno.senha // precisa existir no DTO também
+        };
+
+        return alunoDTO;
+    } catch (error) {
+        console.log(`Erro ao buscar aluno por email: ${error}`);
+        return null;
+    }
+}
+
     /**
     * Cadastra um novo aluno no banco de dados
     * @param aluno Objeto Aluno contendo as informações a serem cadastradas
@@ -275,10 +320,10 @@ class Aluno {
         // pois os valores nunca são concatenados diretamente na query.
         // "RETURNING id_aluno" faz o banco retornar o ID gerado após o INSERT.
         const queryInsertAluno = `
-            INSERT INTO Aluno (nome, sobrenome, data_nascimento, endereco, email, celular)
-            VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING id_aluno;
-        `;
+    INSERT INTO Aluno (nome, sobrenome, data_nascimento, endereco, email, senha, celular)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    RETURNING id_aluno;
+`;
 
         // Extrai e normaliza os valores do objeto Aluno antes de montar o array.
         // Separar essa etapa da chamada ao banco melhora a legibilidade e facilita
@@ -289,6 +334,7 @@ class Aluno {
             aluno.getDataNascimento(),              // Data de nascimento sem transformação
             aluno.getEndereco().toUpperCase(),      // Endereço em maiúsculas
             aluno.getEmail().toLowerCase(),         // E-mail em minúsculas
+             aluno.getSenha(),
             aluno.getCelular()                      // Celular sem transformação
         ];
 
