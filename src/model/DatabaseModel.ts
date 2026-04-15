@@ -1,7 +1,4 @@
-import pg from 'pg';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import pg from 'pg'; 
 
 /**
  * Classe que representa o modelo de banco de dados.
