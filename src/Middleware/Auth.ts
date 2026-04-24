@@ -45,7 +45,7 @@ export class Auth {
             // verifica se a quantidade de linhas retornada foi diferente de 0
             // se foi, quer dizer que o email e senha fornecidos são iguais aos do banco de dados
             if (queryResult.rowCount != 0) {
-                // cria um objeto chamado professor comf o id, nome e email. Essas informações serão devolvidas ao cliente
+                // cria um objeto chamado professor com o id, nome e email. Essas informações serão devolvidas ao cliente
                 const usuario = {
                     id_usuario: queryResult.rows[0].id_usuario,
                     nome: queryResult.rows[0].nome,
@@ -117,7 +117,7 @@ export class Auth {
                 }
             }
 
-            // garante que o decoded não é undefined antes de de continuar
+            // garante que o decoded não é undefined antes de continuar
             if (!decoded) {
                 console.log('Token não pôde ser decodificado');
                 return res.status(401).json({ message: "Token inválido, faça o login", auth: false }).end();
