@@ -1,4 +1,4 @@
-import pg from 'pg'; 
+import pg from 'pg';
 
 /**
  * Classe que representa o modelo de banco de dados.
