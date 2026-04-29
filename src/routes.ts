@@ -1,10 +1,18 @@
+// Importa o Router do Express — é ele quem permite criar e organizar as rotas da aplicação
+// Request e Response são os tipos TypeScript que representam a requisição e a resposta HTTP
+// O "type" antes de Request e Response indica que são importações apenas de tipo (não geram código JS)
 import { Router, type Request, type Response } from "express";
 import { Auth } from "./Middleware/Auth.js";
+
+// Importa os controllers — cada um é responsável por tratar as requisições de sua entidade
+// É o controller quem recebe os dados da requisição, chama o model e devolve a resposta ao cliente
 import AlunoController from "./controller/AlunoController.js";
 import LivroController from "./controller/LivroController.js";
 import EmprestimoController from "./controller/EmprestimoController.js";
 
-
+// Cria uma instância do Router — é neste objeto que todas as rotas serão registradas
+// Cada rota associa um método HTTP + caminho de URL a um método do controller
+// O router é exportado e registrado no server.ts com server.use(router)
 const router = Router();
 
 // ==================== HEALTH CHECK ====================
